@@ -7,6 +7,38 @@ import { Link } from "react-router-dom";
 const Home = () => {
   const { userToken } = useAuth();
   const [tasks, setTasks] = useState([]);
+  const [selectedDate, setSelectedDate] = useState(() => {
+    return new Date().toISOString().split("T")[0]; // YYYY-MM-DD
+  });
+
+  const handleToggleComplete = async (taskId) => {
+    const taskToUpdate = tasks.find((task) => task._id === taskId);
+    const updatedTask = { ...taskToUpdate, completed: !taskToUpdate.completed };
+
+    try {
+      const res = await fetch(
+        `${import.meta.env.VITE_BACKEND_URL}/api/tasks/${taskId}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${userToken}`,
+          },
+          body: JSON.stringify({ completed: updatedTask.completed }),
+        }
+      );
+
+      if (!res.ok) throw new Error("Failed to update task");
+
+      setTasks((prev) =>
+        prev.map((t) =>
+          t._id === taskId ? { ...t, completed: updatedTask.completed } : t
+        )
+      );
+    } catch (error) {
+      console.error("Toggle complete error:", error);
+    }
+  };
 
   const handleDelete = async (taskId) => {
     const confirmDelete = window.confirm(
@@ -30,7 +62,6 @@ const Home = () => {
         throw new Error("Failed to delete task");
       }
 
-      // Update state to reflect deletion
       setTasks((prevTasks) => prevTasks.filter((task) => task._id !== taskId));
     } catch (error) {
       console.error("Delete error:", error);
@@ -55,6 +86,11 @@ const Home = () => {
     }
   }, [userToken]);
 
+  const filteredTasks = tasks.filter((task) => {
+    const taskDate = new Date(task.date).toISOString().split("T")[0];
+    return taskDate === selectedDate;
+  });
+
   return (
     <>
       <Navbar />
@@ -71,26 +107,58 @@ const Home = () => {
             </p>
           ) : (
             <div className="text-left">
-              <h2 className="text-3xl font-bold mb-6 text-center">
-                Your Tasks
-              </h2>
-              {tasks.length > 0 ? (
+              <div className="mb-6 text-center">
+                <h2 className="text-3xl font-bold mb-4">Your Tasks</h2>
+                <div className="flex items-center bg-white rounded-xl shadow-md p-6">
+                  <label htmlFor="date" className="text-lg font-medium mr-3 ">
+                    Select Date:
+                  </label>
+                  <input
+                    type="date"
+                    id="date"
+                    value={selectedDate}
+                    onChange={(e) => setSelectedDate(e.target.value)}
+                    className="border border-gray-300 rounded-md px-3 py-0 text-black"
+                  />
+                </div>
+              </div>
+
+              {filteredTasks.length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 justify-items-center">
-                  {tasks.map((task) => (
+                  {filteredTasks.map((task) => (
                     <div
                       key={task._id}
                       className="bg-white rounded-xl shadow-md p-6 w-full max-w-lg transition-transform hover:scale-[1.02] hover:shadow-lg border border-yellow-500 flex flex-col justify-between"
                     >
-                      <div>
-                        <h3 className="text-2xl font-semibold text-yellow-700">
-                          {task.title}
-                        </h3>
-                        <p className="text-gray-700 mt-2">
-                          {task.description.length > 100
-                            ? task.description.substring(0, 100) + "..."
-                            : task.description}
-                        </p>
+                      <div className="flex items-start gap-3">
+                        <input
+                          type="checkbox"
+                          checked={task.completed || false}
+                          onChange={() => handleToggleComplete(task._id)}
+                          className="mt-1 h-5 w-5 text-yellow-600"
+                        />
+                        <div
+                          className={`${
+                            task.completed ? "line-through text-gray-400" : ""
+                          }`}
+                        >
+                          <h3
+                            className={`text-2xl font-semibold ${
+                              task.completed
+                                ? "line-through text-gray-400"
+                                : "text-yellow-700"
+                            }`}
+                          >
+                            {task.title}
+                          </h3>
+                          <p className="text-gray-700 mt-2">
+                            {task.description.length > 100
+                              ? task.description.substring(0, 100) + "..."
+                              : task.description}
+                          </p>
+                        </div>
                       </div>
+
                       <div className="flex justify-end items-center mt-4 space-x-4 text-xl text-yellow-700">
                         <Link to={`/tasks/${task._id}`} title="View">
                           <BsEye className="hover:text-blue-600 cursor-pointer" />
@@ -109,7 +177,9 @@ const Home = () => {
                   ))}
                 </div>
               ) : (
-                <p className="text-gray-700 text-center">No tasks found.</p>
+                <p className="text-gray-700 text-center">
+                  No tasks found for selected date.
+                </p>
               )}
             </div>
           )}

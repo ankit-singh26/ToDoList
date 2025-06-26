@@ -5,6 +5,7 @@ import { useAuth } from "../context/AuthContext";
 
 const AddTask = () => {
   const [task, setTask] = useState("");
+  const [dueDate, setDueDate] = useState("");
   const [description, setDescription] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -28,7 +29,7 @@ const AddTask = () => {
         "Content-Type": "application/json",
         Authorization: `Bearer ${userToken}`,
       },
-      body: JSON.stringify({ title: task, description }),
+      body: JSON.stringify({ title: task, description, date: dueDate }),
     })
       .then((res) => {
         if (!res.ok) {
@@ -54,10 +55,15 @@ const AddTask = () => {
       <Navbar />
       <div className="min-h-screen bg-gradient-to-br from-yellow-200 to-yellow-400 flex items-center justify-center px-4 py-12">
         <div className="w-full max-w-lg bg-white rounded-xl shadow-lg p-8">
-          <h2 className="text-3xl font-bold text-yellow-700 mb-6 text-center">Add New Task</h2>
+          <h2 className="text-3xl font-bold text-yellow-700 mb-6 text-center">
+            Add New Task
+          </h2>
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <div>
-              <label htmlFor="task" className="block text-sm font-medium text-gray-700 mb-1">
+              <label
+                htmlFor="task"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
                 Task Title
               </label>
               <input
@@ -72,7 +78,10 @@ const AddTask = () => {
             </div>
 
             <div>
-              <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
+              <label
+                htmlFor="description"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
                 Description
               </label>
               <textarea
@@ -85,8 +94,27 @@ const AddTask = () => {
               />
             </div>
 
+            <div>
+              <label
+                htmlFor="date"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
+                Due Date
+              </label>
+              <input
+                type="date"
+                name="dueDate"
+                className="w-full border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                value={dueDate}
+                onChange={(e) => setDueDate(e.target.value)}
+                required
+              />
+            </div>
+
             {error && (
-              <p className="text-red-600 text-sm font-semibold text-center">{error}</p>
+              <p className="text-red-600 text-sm font-semibold text-center">
+                {error}
+              </p>
             )}
 
             <button
