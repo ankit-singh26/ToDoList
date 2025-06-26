@@ -60,7 +60,7 @@ const Navbar = () => {
             </>
           ) : (
             <>
-              <Link to="/add" className="hover:text-yellow-300">Create Blog</Link>
+              <Link to="/add" className="hover:text-yellow-300">Add Task</Link>
               <button onClick={handleLogout} className="text-red-500 text-left">Logout</button>
             </>
           )}
